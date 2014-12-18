@@ -1,0 +1,51 @@
+#!/usr/bin/php
+<?php
+
+$configPath = getenv("HOME").'/.ec2ssh';
+if (!file_exists($configPath) && !is_dir($configPath)) {
+    mkdir($configPath);
+}
+
+if (!file_exists($configPath.'/config')) {
+    echo "No config file found.\n";
+    $loginKey = readline("Enter the location of your login ssh key: ");
+    file_put_contents($configPath.'/config','loginKey = "'.$loginKey.'"');
+}
+
+$config = parse_ini_file($configPath.'/config');
+
+if (!isset($config["loginKey"])) {
+    die("No loginKey given in config file.");
+}
+
+echo "Loading instance data via aws cli tool...\n";
+$instances = `aws ec2 describe-instances --query 'Reservations[*].Instances[0].{Host:PublicDnsName,State:State.Name,Name:Tags[?Key==\`Name\`]|[0].Value}' --output json`;
+$instances = json_decode($instances);
+
+function cmp($a, $b) {
+    return strcmp($a->Name, $b->Name);
+}
+
+usort($instances, "cmp");
+
+echo "\nInstances:\n\n";
+
+foreach ($instances as $key => $value) {
+    echo str_pad($key, 2, '0', STR_PAD_LEFT)." | ".$value->Name." | ".$value->State." | ".$value->Host."\n";
+}
+
+$selection = readline("\nSelect instance(s): ");
+$selection = explode(",", $selection);
+
+if (count($selection) == 1) {
+    echo "\nCalling... ssh -i ".$config['loginKey']." ec2-user@".$instances[$selection[0]]->Host."\n";
+    passthru('ssh -i '.$config['loginKey'].' ec2-user@'.$instances[$selection[0]]->Host);
+} elseif (count($selection) > 1) {
+    $command = readline("\nCommand: ");
+    foreach ($selection as $key) {
+      echo("\nConnecting to ".$instances[$key]->Name."...\n");
+      passthru('ssh -i '.$config['loginKey'].' ec2-user@'.$instances[$key]->Host.' '.$command);
+    }
+} else {
+    die("Wrong selection!");
+}
