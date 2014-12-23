@@ -4,6 +4,8 @@
 $configPath = getenv("HOME").'/.ec2ssh';
 $cacheTime = 120*60;
 
+$cmdOptions = getopt("", ["no-cache::"]);
+
 if (!file_exists($configPath) && !is_dir($configPath)) {
     mkdir($configPath);
 }
@@ -20,7 +22,7 @@ if (!isset($config["loginKey"])) {
     die("No loginKey given in config file.");
 }
 
-if (file_exists($configPath.'/cache') && filemtime($configPath.'/cache') > time()-$cacheTime) {
+if (file_exists($configPath.'/cache') && filemtime($configPath.'/cache') > time()-$cacheTime && !isset($cmdOptions["no-cache"])) {
     echo "Loading instance data from cache...\n";
     $instances = file_get_contents($configPath.'/cache');
 } else {
