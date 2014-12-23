@@ -17,7 +17,9 @@ In order to avoid loading via the aws cli tool all the time, the script caches t
     --no-cache            Ignore cache, load instances via aws cli tool and update cache afterwards
 
 ### Prerequisites
-You need to have the aws cli tools installed in order to use this script.
+
+- AWS CLI tools need to be installed in order to run this script.
+- PHP needs to be installed to run this script
 
 ### Misc
 Let me know if you are having any difficulties by opening an issue here.
