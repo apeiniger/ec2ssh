@@ -2,6 +2,8 @@
 <?php
 
 $configPath = getenv("HOME").'/.ec2ssh';
+$cacheTime = 120*60;
+
 if (!file_exists($configPath) && !is_dir($configPath)) {
     mkdir($configPath);
 }
@@ -18,8 +20,14 @@ if (!isset($config["loginKey"])) {
     die("No loginKey given in config file.");
 }
 
-echo "Loading instance data via aws cli tool...\n";
-$instances = `aws ec2 describe-instances --query 'Reservations[*].Instances[0].{Host:PublicDnsName,State:State.Name,Name:Tags[?Key==\`Name\`]|[0].Value}' --output json`;
+if (file_exists($configPath.'/cache') && filemtime($configPath.'/cache') > time()-$cacheTime) {
+    echo "Loading instance data from cache...\n";
+    $instances = file_get_contents($configPath.'/cache');
+} else {
+    echo "Loading instance data via aws cli tool...\n";
+    $instances = `aws ec2 describe-instances --query 'Reservations[*].Instances[0].{Host:PublicDnsName,State:State.Name,Name:Tags[?Key==\`Name\`]|[0].Value}' --output json`;
+    file_put_contents($configPath.'/cache', $instances);
+}
 $instances = json_decode($instances);
 
 function cmp($a, $b) {
