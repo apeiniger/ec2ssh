@@ -48,7 +48,7 @@ $selection = readline("\nSelect instance(s): ");
 $selection = explode(",", $selection);
 
 if (count($selection) == 1) {
-    echo "\nCalling... ssh -i ".$config['loginKey']." ec2-user@".$instances[$selection[0]]->Host."\n";
+    echo "\nCalling... ssh -i ".$config['loginKey']." -o ServerAliveInterval=30 ec2-user@".$instances[$selection[0]]->Host."\n";
     passthru('ssh -i '.$config['loginKey'].' ec2-user@'.$instances[$selection[0]]->Host);
 } elseif (count($selection) > 1) {
     $command = readline("\nCommand: ");
